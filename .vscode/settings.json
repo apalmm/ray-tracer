@@ -1,0 +1,7 @@
+{
+  "cmake.sourceDirectory": "/Users/aidanpalmer/Documents/cpsc478/final project/previz/Eigen",
+  "C_Cpp.default.compilerPath": "/usr/bin/clang",
+  "files.associations": {
+    "vector": "cpp"
+  }
+}
