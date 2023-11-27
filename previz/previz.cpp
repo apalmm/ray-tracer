@@ -48,6 +48,14 @@ struct Light {
   VEC3 color;
 };
 
+struct Triangle {
+  VEC3 a;
+  VEC3 b;
+  VEC3 c;
+
+  bool shiny;
+};
+
 int windowWidth = 640;
 int windowHeight = 480;
 
@@ -69,6 +77,9 @@ vector<Cylinder> cylinders;
 
 // lights
 vector<Light> lights;
+
+//triangles
+vector<Triangle> triangles;
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -158,14 +169,44 @@ bool rayCylinderIntersect(const float radius, const VEC3& axis, const VEC3& cent
     return false;
 
   return true;
-  // VEC3 bone = left - right;
-  // float y = rayPos[2] + (rayDir[2] * t);
+}
 
-  // if (axis[2] < y && z < right[2]) {
-  //   return true;
-  // }
+bool rayTriangleIntersect(Triangle tri, const VEC3& rayPos, const VEC3& rayDir, float& t) {
+  VEC3 a = tri.b - tri.a; // edge 0
+  VEC3 b = tri.c - tri.a; // edge 1
+  VEC3 c = a.cross(b).normalized(); // this is the triangle's normal
+  float NdotRayDirection = c.dot(rayDir);
+  if (fabs(NdotRayDirection) < 0.0008)
+    return false; // almost 0, parallel don't intersect
 
-  // return false;
+  float d = -c.dot(tri.a);
+  t = -(c.dot(rayPos) + d) / c.dot(rayDir);
+
+  if (t < 0) return false; // the triangle is behind
+
+  VEC3 pointHit = rayPos + t * rayDir;
+  VEC3 C;
+
+
+  // edge 0
+  VEC3 edge0 = tri.b - tri.a; 
+  VEC3 vp0 = pointHit - tri.a;
+  C = edge0.cross(vp0);
+  if (c.dot(C) < 0) return false; // P is on the right side
+
+  // edge 1
+  VEC3 edge1 = tri.c - tri.b; 
+  VEC3 vp1 = pointHit - tri.b;
+  C = edge1.cross(vp1);
+  if (c.dot(C) < 0)  return false; // P is on the right side
+
+  // edge 2
+  VEC3 edge2 = tri.a - tri.c; 
+  VEC3 vp2 = pointHit - tri.c;
+  C = edge2.cross(vp2);
+  if (c.dot(C) < 0) return false; // P is on the right side;
+
+  return true;
 }
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -187,26 +228,59 @@ bool getInShadow(VEC3 point, VEC3 direction) {
       return true;
     }
   }
+  for (int a = 0; a < triangles.size(); a++)
+  {
+    Triangle currentTriangle = triangles[a];
+    if (rayTriangleIntersect(currentTriangle, point, direction, tMin))
+    {
+      return true;
+    }
+  }
   return false;
 }
 
 void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor) 
 {
+  // pixelColor = VEC3(0.5294,0.8078,0.921); //sky blue
   pixelColor = VEC3(0,0,0);
   VEC3 c(0, 0, 0);
+  VEC3 boneColor(1, 1, 1);
 
   // look for intersections
   bool sphereHit = false;
   bool cylinderHit = false;
-  bool rectangleHit = false;
+  bool triangleHit = false;
 
   bool shadowFlag = false;
+
+  bool shiny = false;
 
   int hitID = -1;
   float tMinFound = FLT_MAX;
 
   VEC3 point;
   VEC3 normal;
+
+  for (int a = 0; a < triangles.size(); a++)
+  {
+    float tMin = FLT_MAX;
+    if (rayTriangleIntersect(triangles[a], rayPos, rayDir, tMin))
+    { 
+      // is the closest so far?
+      if (tMin < tMinFound)
+      {
+        triangleHit = true;
+        sphereHit = false;
+        cylinderHit = false;
+        
+        tMinFound = tMin; 
+        point = (rayPos * .9995) + (rayDir * tMinFound);
+        normal = (triangles[a].a).cross(triangles[a].b).normalized(); // this is the triangle's normal
+
+        hitID = a;
+      }
+    }
+  }
 
   for (int y = 0; y < sphereCenters.size(); y++)
   {
@@ -217,6 +291,9 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
       if (tMin < tMinFound)
       {
         sphereHit = true;
+        triangleHit = false;
+        cylinderHit = false;
+
         tMinFound = tMin;
 
         point = (rayPos * 1.0008) + (rayDir * tMinFound);
@@ -236,6 +313,8 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
       // is the closest so far?
       if (tMin < tMinFound)
       {
+        sphereHit = false;
+        triangleHit = false;
         cylinderHit = true;
         tMinFound = tMin;
 
@@ -248,6 +327,22 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
         hitID = z;
       }
     }
+  }
+  
+  if (triangleHit) {
+    for(int l = 0; l < lights.size(); l++) {
+      VEC3 to_light = ((eye - point) + (lights[l].position - point)).normalized();
+
+      float l_norm = normal.dot((lights[l].position - point).normalized());
+      float h_norm = normal.dot(to_light);
+
+      VEC3 highlight = ((-1 * (lights[l].position - point).normalized()) + 2 * l_norm * normal).normalized();
+      VEC3 phong = lights[l].color * pow(max(float(0), float(highlight.dot(-rayDir))), 10);
+
+      shadowFlag = !getInShadow(point, (lights[l].position - point).normalized());
+      c += shadowFlag * (boneColor.cwiseProduct(max(float(0), l_norm) * lights[l].color + phong));    
+    }
+    pixelColor = c;
   }
 
   // No intersection, return white
@@ -272,9 +367,6 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
   
   if (cylinderHit) {
     c.setZero();
-
-    VEC3 boneColor(1, 1, 1);
-
     for(int l = 0; l < lights.size(); l++) {
       VEC3 to_light = ((eye - point) + (lights[l].position - point)).normalized();
 
@@ -365,12 +457,21 @@ void setSkeletonsToSpecifiedFrame(int frameIndex)
 
 void construct() { //construct static scene objects
   sphereCenters.push_back(VEC3(0.4,-0.2,1.4));
-  sphereRadii.push_back(1);
+  sphereRadii.push_back(1.05);
   sphereColors.push_back(VEC3(0,0,1));
 
-  sphereCenters.push_back(VEC3(0,-1000,0));
-  sphereRadii.push_back(1000);
+  sphereCenters.push_back(VEC3(0,-1500,0));
+  sphereRadii.push_back(1500);
   sphereColors.push_back(VEC3(0.5,0.5,0.5));
+
+  Triangle t1 = {
+    VEC3(4, -0.1, 2), //a
+    VEC3(2, -0.1, -2), //b
+    VEC3(1, 2.5, -0.5), //c
+    true
+  };
+
+  triangles.push_back(t1);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +504,7 @@ void buildScene()
 
     VEC4 pelvisTranslation = translations[1];
 
-    eye[0] = pelvisTranslation[0] - 4;
+    eye[0] = pelvisTranslation[0] - 4; 
     eye[1] = pelvisTranslation[1] + 0.5;
     eye[2] = pelvisTranslation[2];
 
@@ -479,17 +580,17 @@ int main(int argc, char** argv)
   // is really slow.
   Light light1 = {
     VEC3(0, 10, 0), 
-    VEC3(0.2, 0.2, 0.2)
+    VEC3(0.5, 0.5, 0.5)
   };
 
   Light light2 = {
-    VEC3(0, 10, -10), 
-    VEC3(0, 0, 0.5)
+    VEC3(5, 10, -10), 
+    VEC3(0.5, 0.5, 0.5)
   };
 
   Light light3 = {
-    VEC3(0, 10, 10), 
-    VEC3(0.5, 0, 0)
+    VEC3(-5, 10, 10), 
+    VEC3(0.5, 0.5, 0.5)
   };
 
   lights.push_back(light1);
