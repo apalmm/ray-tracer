@@ -56,6 +56,16 @@ struct Triangle {
   bool shiny;
 };
 
+struct Box {
+  VEC3 center;
+  
+  float rotationY;
+
+  float length;
+  float width;
+  float height;
+};
+
 int windowWidth = 640;
 int windowHeight = 480;
 
@@ -80,6 +90,95 @@ vector<Light> lights;
 
 //triangles
 vector<Triangle> triangles;
+
+void constructBox(Box b) {
+  //face one
+
+  Triangle t1 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] - b.width / 2), //a
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  Triangle t2 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //a
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  //face two
+  Triangle t3 = {
+    VEC3(b.center[0] + b.length / 2, b.center[1] - b.height / 2, b.center[2] - b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  Triangle t4 = {
+    VEC3(b.center[0] + b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  //face three
+  Triangle t5 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //a
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] - b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  Triangle t6 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] - b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] - b.height / 2, b.center[2] - b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  //face four
+  Triangle t7 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //a
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //c
+    true
+  };
+
+  Triangle t8 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] - b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //c
+    true
+  };
+
+  //face five
+  Triangle t9 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //b
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //c
+    true
+  };
+
+  Triangle t10 = {
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //a
+    VEC3(b.center[0] + b.length / 2, b.center[1] + b.height / 2, b.center[2] + b.width / 2), //b
+    VEC3(b.center[0] - b.length / 2, b.center[1] + b.height / 2, b.center[2] - b.width / 2), //c
+    true
+  };
+
+  triangles.push_back(t1);
+  triangles.push_back(t2);
+  triangles.push_back(t3);
+  triangles.push_back(t4);
+  triangles.push_back(t5);
+  triangles.push_back(t6);
+  triangles.push_back(t7);
+  triangles.push_back(t8);
+  triangles.push_back(t9);
+  triangles.push_back(t10);
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +273,7 @@ bool rayCylinderIntersect(const float radius, const VEC3& axis, const VEC3& cent
 bool rayTriangleIntersect(Triangle tri, const VEC3& rayPos, const VEC3& rayDir, float& t) {
   VEC3 a = tri.b - tri.a; // edge 0
   VEC3 b = tri.c - tri.a; // edge 1
-  VEC3 c = a.cross(b).normalized(); // this is the triangle's normal
+  VEC3 c = (a.cross(b)).normalized(); // this is the triangle's normal
   float NdotRayDirection = c.dot(rayDir);
   if (fabs(NdotRayDirection) < 0.0008)
     return false; // almost 0, parallel don't intersect
@@ -186,7 +285,6 @@ bool rayTriangleIntersect(Triangle tri, const VEC3& rayPos, const VEC3& rayDir, 
 
   VEC3 pointHit = rayPos + t * rayDir;
   VEC3 C;
-
 
   // edge 0
   VEC3 edge0 = tri.b - tri.a; 
@@ -252,7 +350,6 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
   bool triangleHit = false;
 
   bool shadowFlag = false;
-
   bool shiny = false;
 
   int hitID = -1;
@@ -274,7 +371,7 @@ void rayColor(const VEC3& rayPos, const VEC3& rayDir, VEC3& pixelColor)
         cylinderHit = false;
         
         tMinFound = tMin; 
-        point = (rayPos * .9995) + (rayDir * tMinFound);
+        point = (rayPos * 1.0008) + (rayDir * tMinFound);
         normal = (triangles[a].a).cross(triangles[a].b).normalized(); // this is the triangle's normal
 
         hitID = a;
@@ -456,13 +553,24 @@ void setSkeletonsToSpecifiedFrame(int frameIndex)
 }
 
 void construct() { //construct static scene objects
-  sphereCenters.push_back(VEC3(0.4,-0.2,1.4));
-  sphereRadii.push_back(1.05);
+  sphereCenters.push_back(VEC3(1.5,2,2));
+  sphereRadii.push_back(0.5);
   sphereColors.push_back(VEC3(0,0,1));
+  int c = 2;
 
   sphereCenters.push_back(VEC3(0,-1500,0));
   sphereRadii.push_back(1500);
   sphereColors.push_back(VEC3(0.5,0.5,0.5));
+  
+  Box b = {
+    VEC3(0.4, 0.35, 1.5),
+    0,
+    1,
+    0.95,
+    0.7,
+  };
+
+  constructBox(b);
 
   Triangle t1 = {
     VEC3(4, -0.1, 2), //a
@@ -528,11 +636,11 @@ void buildScene()
     // store the spheres
     sphereCenters.push_back(leftVertex.head<3>());
     sphereRadii.push_back(0.05);
-    sphereColors.push_back(VEC3(1,0,0));
+    sphereColors.push_back(VEC3(1,1,1));
     
     sphereCenters.push_back(rightVertex.head<3>());
     sphereRadii.push_back(0.05);
-    sphereColors.push_back(VEC3(1,0,0));
+    sphereColors.push_back(VEC3(1,1,1));
 
     for (int y = 0; y < totalSpheres; y++)
     {
@@ -580,22 +688,28 @@ int main(int argc, char** argv)
   // is really slow.
   Light light1 = {
     VEC3(0, 10, 0), 
-    VEC3(0.5, 0.5, 0.5)
+    VEC3(0, 0, 1)
   };
 
   Light light2 = {
     VEC3(5, 10, -10), 
-    VEC3(0.5, 0.5, 0.5)
+    VEC3(0, 1, 0)
   };
 
   Light light3 = {
     VEC3(-5, 10, 10), 
+    VEC3(1, 0, 0)
+  };
+
+  Light light4 = {
+    VEC3(0, 0, 0), 
     VEC3(0.5, 0.5, 0.5)
   };
 
   lights.push_back(light1);
   lights.push_back(light2);
   lights.push_back(light3);
+  lights.push_back(light4);
 
   for (int x = 0; x < 1200; x += 3)
   {
